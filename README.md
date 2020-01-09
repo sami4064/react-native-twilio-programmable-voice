@@ -372,9 +372,6 @@ TwilioVoice.getActiveCall()
             _deviceDidReceiveIncoming(incomingCall)
         }
     })
-
-// Unregister device with Twilio (iOS only)
-TwilioVoice.unregister()
 ```
 
 ## Twilio Voice SDK reference
