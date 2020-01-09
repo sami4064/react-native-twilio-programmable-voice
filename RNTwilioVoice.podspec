@@ -9,12 +9,13 @@ Pod::Spec.new do |s|
   s.authors      = spec['author']['name']
   s.homepage     = spec['homepage']
   s.license      = spec['license']
-  s.platform     = :ios, "8.1"
+  s.platform     = :ios, "10"
 
   s.source_files = [ "ios/RNTwilioVoice/*.h", "ios/RNTwilioVoice/*.m"]
   s.source = {:path => "./RNTwilioVoice"}
 
   s.dependency 'React'
-  s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '${PODS_ROOT}/TwilioVoice' }
-  s.frameworks   = 'TwilioVoice'
+  s.dependency 'TwilioVoice', '~> 5.1.1'
+  # s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '${PODS_ROOT}/TwilioVoice' }
+  # s.frameworks   = 'TwilioVoice'
 end

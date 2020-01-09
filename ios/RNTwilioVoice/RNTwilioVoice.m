@@ -96,7 +96,7 @@ RCT_EXPORT_METHOD(configureCallKit: (NSDictionary *)params) {
 RCT_EXPORT_METHOD(connect: (NSDictionary *)params) {
   NSLog(@"Calling phone number %@", [params valueForKey:@"To"]);
 
-//  [TwilioVoice setLogLevel:TVOLogLevelVerbose];
+  [TwilioVoice setLogLevel: TVOLogLevelAll];
 
   UIDevice* device = [UIDevice currentDevice];
   device.proximityMonitoringEnabled = YES;
@@ -194,7 +194,7 @@ RCT_REMAP_METHOD(getActiveCall,
 {
     self = [super init];
     if (self) {
-        self.audioDevice = [TVODefaultAudioDevice init];
+        self.audioDevice = [TVODefaultAudioDevice audioDevice];
         TwilioVoice.audioDevice = self.audioDevice;
     }
     return self;
@@ -588,18 +588,23 @@ RCT_REMAP_METHOD(getActiveCall,
 - (void)performVoiceCallWithUUID:(NSUUID *)uuid
                           client:(NSString *)client
                       completion:(void(^)(BOOL success))completionHandler {
-    CXHandle* callHandle  = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:client];
-    CXStartCallAction* startCallAction = [[CXStartCallAction alloc] initWithCallUUID:uuid handle:callHandle];
-    CXTransaction* transaction = [[CXTransaction alloc] initWithAction:startCallAction];
+//    CXHandle* callHandle  = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:client];
+//    CXStartCallAction* startCallAction = [[CXStartCallAction alloc] initWithCallUUID:uuid handle:callHandle];
+//    CXTransaction* transaction = [[CXTransaction alloc] initWithAction:startCallAction];
+//
+//    [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+//        completionHandler(!error);
+//    }];
     
-//    self.call = [TwilioVoice call:[self fetchAccessToken]
-//                                            params:_callParams
-//                                              uuid:uuid
-//                                          delegate:self];
+    [_callParams setValue:[uuid UUIDString] forKey:@"uniqueCallId"];
+    NSDictionary* params = _callParams;
     
-    [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-        completionHandler(!error);
+    TVOConnectOptions* connectionOptions = [TVOConnectOptions optionsWithAccessToken:[self fetchAccessToken] block:^(TVOConnectOptionsBuilder * _Nonnull builder) {
+        builder.params = params;
+        builder.uuid = uuid;
     }];
+    
+    self.call = [TwilioVoice connectWithOptions:connectionOptions delegate:self];
     
     self.callKitCompletionCallback = completionHandler;
 }
