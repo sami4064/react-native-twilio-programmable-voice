@@ -30,6 +30,7 @@
 		38F71DF51E9C333F0067E86F /* libRNTwilioVoice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNTwilioVoice.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		38F71DF81E9C333F0067E86F /* RNTwilioVoice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNTwilioVoice.h; sourceTree = "<group>"; };
 		38F71DF91E9C333F0067E86F /* RNTwilioVoice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RNTwilioVoice.m; sourceTree = "<group>"; };
+		84FF51AD23D82E4E002400EC /* ringtone */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ringtone; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +56,7 @@
 		38F71DEC1E9C333E0067E86F = {
 			isa = PBXGroup;
 			children = (
+				84FF51AD23D82E4E002400EC /* ringtone */,
 				38F71DF71E9C333F0067E86F /* RNTwilioVoice */,
 				38F71DF61E9C333F0067E86F /* Products */,
 				016DD9801ECC9B4B00315CD4 /* Frameworks */,
@@ -118,6 +120,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 38F71DEC1E9C333E0067E86F;

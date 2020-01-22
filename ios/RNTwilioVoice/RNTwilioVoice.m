@@ -10,7 +10,7 @@
 @import CallKit;
 @import TwilioVoice;
 
-@interface RNTwilioVoice () <PKPushRegistryDelegate, TVONotificationDelegate, TVOCallDelegate, CXProviderDelegate>
+@interface RNTwilioVoice () <PKPushRegistryDelegate, TVONotificationDelegate, TVOCallDelegate, CXProviderDelegate, AVAudioPlayerDelegate>
 @property (nonatomic, strong) NSString *deviceTokenString;
 
 @property (nonatomic, strong) PKPushRegistry *voipRegistry;
@@ -21,6 +21,7 @@
 @property (nonatomic, strong) CXProvider *callKitProvider;
 @property (nonatomic, strong) CXCallController *callKitCallController;
 @property (nonatomic, strong) TVODefaultAudioDevice *audioDevice;
+@property (nonatomic, strong) AVAudioPlayer* ringtonePlayer;
 
 @end
 
@@ -32,6 +33,7 @@
 }
 
 NSString * const StatePending = @"PENDING";
+NSString * const StateRinging = @"RINGING";
 NSString * const StateConnecting = @"CONNECTING";
 NSString * const StateConnected = @"CONNECTED";
 NSString * const StateDisconnected = @"DISCONNECTED";
@@ -46,7 +48,7 @@ RCT_EXPORT_MODULE()
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[@"connectionDidConnect", @"connectionDidDisconnect", @"callRejected", @"deviceReady", @"deviceNotReady"];
+  return @[@"callStartedRinging",@"connectionDidConnect", @"connectionDidDisconnect", @"callRejected", @"deviceReady", @"deviceNotReady"];
 }
 
 @synthesize bridge = _bridge;
@@ -183,6 +185,8 @@ RCT_REMAP_METHOD(getActiveCall,
       [params setObject:StateConnecting forKey:@"call_state"];
     } else if (self.call.state == TVOCallStateDisconnected) {
       [params setObject:StateDisconnected forKey:@"call_state"];
+    } else if (self.call.state == TVOCallStateRinging){
+      [params setObject:StateRinging forKey:@"call_state"];
     }
     resolve(params);
   } else{
@@ -340,11 +344,36 @@ RCT_REMAP_METHOD(getActiveCall,
 }
 
 #pragma mark - TVOCallDelegate
+-(void)callDidStartRinging:(TVOCall *)call{
+    self.call = call;
+    
+    NSMutableDictionary *callParams = [[NSMutableDictionary alloc] init];
+    [callParams setObject:call.sid forKey:@"call_sid"];
+    if (call.state == TVOCallStateRinging) {
+         [callParams setObject:StateRinging forKey:@"call_state"];
+    }else if (call.state == TVOCallStateConnecting) {
+      [callParams setObject:StateConnecting forKey:@"call_state"];
+    } else if (call.state == TVOCallStateConnected) {
+      [callParams setObject:StateConnected forKey:@"call_state"];
+    }
+
+    if (call.from){
+      [callParams setObject:call.from forKey:@"from"];
+    }
+    if (call.to){
+      [callParams setObject:call.to forKey:@"to"];
+    }
+    [self playRingback];
+    [self sendEventWithName:@"callStartedRinging" body:callParams];
+}
+
 - (void)callDidConnect:(TVOCall *)call {
   self.call = call;
   self.callKitCompletionCallback(YES);
   self.callKitCompletionCallback = nil;
 
+    [self stopRingback];
+    
   NSMutableDictionary *callParams = [[NSMutableDictionary alloc] init];
   [callParams setObject:call.sid forKey:@"call_sid"];
   if (call.state == TVOCallStateConnecting) {
@@ -400,6 +429,7 @@ RCT_REMAP_METHOD(getActiveCall,
   }
   [self sendEventWithName:@"connectionDidDisconnect" body:params];
 
+    [self stopRingback];
   self.call = nil;
   self.callKitCompletionCallback = nil;
 }
@@ -624,6 +654,43 @@ RCT_REMAP_METHOD(getActiveCall,
     NSLog(@"handleAppTerminateNotification disconnecting an active call");
     [self.call disconnect];
   }
+}
+
+
+#pragma mark - Ringback
+
+-(void) playRingback {
+    NSURL* ringtonePath = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"ringtone" ofType:@"wav"] ];
+    @try {
+        self.ringtonePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:ringtonePath error:nil];
+        self.ringtonePlayer.delegate = self;
+        self.ringtonePlayer.numberOfLoops = -1;
+        
+        self.ringtonePlayer.volume = 1.0;
+        [self.ringtonePlayer play];
+    } @catch (NSException* e){
+        NSLog(@"Failed to initialize audio player");
+    }
+}
+
+-(void) stopRingback {
+    if (self.ringtonePlayer.isPlaying == false) {
+        return;
+    }
+    
+    [self.ringtonePlayer stop];
+}
+
+-(void) audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag{
+    if (flag) {
+        NSLog(@"Audio player finished playing successfully");
+    } else {
+        NSLog(@"Audio player finished playing with some error");
+    }
+}
+
+-(void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error{
+    NSLog(@"Decode error occurred: %@",[error localizedDescription]);
 }
 
 @end
