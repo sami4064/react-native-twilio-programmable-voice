@@ -660,9 +660,10 @@ RCT_REMAP_METHOD(getActiveCall,
 #pragma mark - Ringback
 
 -(void) playRingback {
-    NSURL* ringtonePath = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"ringtone" ofType:@"wav"] ];
+    NSURL* ringtonePathURL = [[NSBundle mainBundle] URLForResource:@"ringtone" withExtension:@"wav" subdirectory:@"ringtone"];
+
     @try {
-        self.ringtonePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:ringtonePath error:nil];
+        self.ringtonePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:ringtonePathURL error:nil];
         self.ringtonePlayer.delegate = self;
         self.ringtonePlayer.numberOfLoops = -1;
         
