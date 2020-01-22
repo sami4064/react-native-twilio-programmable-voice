@@ -17,6 +17,7 @@ const _eventHandlers = {
     deviceDidReceiveIncoming: new Map(),
     connectionDidConnect: new Map(),
     connectionDidDisconnect: new Map(),
+    callStartedRinging: new Map(),
     //iOS specific
     callRejected: new Map(),
 }
