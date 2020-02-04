@@ -204,6 +204,10 @@ RCT_REMAP_METHOD(getActiveCall,
     return self;
 }
 - (void)initPushRegistry {
+    
+//  self.audioDevice = [TVODefaultAudioDevice audioDevice];
+//  TwilioVoice.audioDevice = self.audioDevice;
+
   self.voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
   self.voipRegistry.delegate = self;
   self.voipRegistry.desiredPushTypes = [NSSet setWithObject:PKPushTypeVoIP];
@@ -482,6 +486,7 @@ RCT_REMAP_METHOD(getActiveCall,
   NSLog(@"provider:performStartCallAction");
 
   self.audioDevice.enabled = NO;
+    self.audioDevice.block();
 
 
   [self.callKitProvider reportOutgoingCallWithUUID:action.callUUID startedConnectingAtDate:[NSDate date]];
@@ -509,6 +514,8 @@ RCT_REMAP_METHOD(getActiveCall,
   NSAssert([self.callInvite.uuid isEqual:action.callUUID], @"We only support one Invite at a time.");
 
   self.audioDevice.enabled = NO;
+    self.audioDevice.block();
+    
   [self performAnswerVoiceCallWithUUID:action.callUUID completion:^(BOOL success) {
     if (success) {
       [action fulfill];
@@ -661,7 +668,6 @@ RCT_REMAP_METHOD(getActiveCall,
 
 -(void) playRingback {
     NSURL* ringtonePathURL = [[NSBundle mainBundle] URLForResource:@"ringtone" withExtension:@"wav" subdirectory:@"ringtone"];
-
     @try {
         self.ringtonePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:ringtonePathURL error:nil];
         self.ringtonePlayer.delegate = self;
