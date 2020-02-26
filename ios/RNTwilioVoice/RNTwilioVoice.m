@@ -48,7 +48,7 @@ RCT_EXPORT_MODULE()
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[@"callStartedRinging",@"connectionDidConnect", @"connectionDidDisconnect", @"callRejected", @"deviceReady", @"deviceNotReady"];
+  return @[@"callStartedRinging",@"receivedCallInvite",@"connectionDidConnect", @"connectionDidDisconnect", @"callRejected", @"deviceReady", @"deviceNotReady"];
 }
 
 @synthesize bridge = _bridge;
@@ -293,7 +293,10 @@ RCT_REMAP_METHOD(getActiveCall,
 
 - (void)cancelledCallInviteReceived:(TVOCancelledCallInvite *)cancelledCallInvite error:(NSError *)error{
     self.callInviteCancelled = cancelledCallInvite;
+
     if(self.callInvite == nil) return;
+    [self handleCallInviteCanceled:self.callInvite];
+
     if(self.callInvite.callSid == cancelledCallInvite.callSid){
         NSLog(@"received cancelled call invite.");
         NSLog(@"  >> cancelled call from %@", cancelledCallInvite.from);
