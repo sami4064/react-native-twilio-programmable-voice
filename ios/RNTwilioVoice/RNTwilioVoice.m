@@ -15,6 +15,7 @@
 
 @property (nonatomic, strong) PKPushRegistry *voipRegistry;
 @property (nonatomic, strong) TVOCallInvite *callInvite;
+@property (nonatomic, strong) NSDictionary* customParams;
 @property (nonatomic, strong) TVOCancelledCallInvite* callInviteCancelled;
 @property (nonatomic, strong) TVOCall *call;
 @property (nonatomic, strong) void(^callKitCompletionCallback)(BOOL);
@@ -168,6 +169,13 @@ RCT_REMAP_METHOD(getActiveCall,
     if (self.callInvite && self.callInviteCancelled && self.callInvite.callSid == self.callInviteCancelled.callSid) {
       [params setObject:StateRejected forKey:@"call_state"];
     }
+    NSLog(@"custom params: %@", self.customParams);
+    if(self.customParams){
+          NSString* callType = [self.customParams valueForKey:@"CallType"];
+          if(callType){
+            [params setObject:callType forKey:@"type"];
+          }
+    }
     resolve(params);
   } else if (self.call) {
     if (self.call.sid) {
@@ -188,6 +196,14 @@ RCT_REMAP_METHOD(getActiveCall,
     } else if (self.call.state == TVOCallStateRinging){
       [params setObject:StateRinging forKey:@"call_state"];
     }
+      NSLog(@"custom params: %@", self.customParams);
+      if(self.customParams){
+            NSString* callType = [self.customParams valueForKey:@"CallType"];
+            if(callType){
+              [params setObject:callType forKey:@"type"];
+            }
+      }
+
     resolve(params);
   } else{
     reject(@"no_call", @"There was no active call", nil);
@@ -285,6 +301,7 @@ RCT_REMAP_METHOD(getActiveCall,
 #pragma mark - TVONotificationDelegate
 - (void)callInviteReceived:(TVOCallInvite *)callInvite {
 //    if (callInvite.state == TVOCallInviteStatePending) {
+    self.customParams = [callInvite customParameters];
       [self handleCallInviteReceived:callInvite];
 //    } else if (callInvite.state == TVOCallInviteStateCanceled) {
 //      [self handleCallInviteCanceled:callInvite];
@@ -344,6 +361,7 @@ RCT_REMAP_METHOD(getActiveCall,
   [self sendEventWithName:@"connectionDidDisconnect" body:params];
 
   self.callInvite = nil;
+  self.customParams = nil;
 }
 
 - (void)notificationError:(NSError *)error {
@@ -438,6 +456,8 @@ RCT_REMAP_METHOD(getActiveCall,
 
     [self stopRingback];
   self.call = nil;
+  self.customParams = nil;
+
   self.callKitCompletionCallback = nil;
 }
 
@@ -539,8 +559,10 @@ RCT_REMAP_METHOD(getActiveCall,
     [self sendEventWithName:@"callRejected" body:@"callRejected"];
     [self.callInvite reject];
     self.callInvite = nil;
+    self.customParams = nil;
   } else if (self.call) {
     [self.call disconnect];
+    self.customParams = nil;
   }
 
   [action fulfill];
@@ -654,6 +676,7 @@ RCT_REMAP_METHOD(getActiveCall,
 
     self.call = [self.callInvite acceptWithDelegate:self];
     self.callInvite = nil;
+
     self.callKitCompletionCallback = completionHandler;
 }
 
